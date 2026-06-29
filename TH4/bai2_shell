@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd /home/pi
+
+python3 hethong.py
+
+#Cấp quyền thực thi:chmod +x run.sh
