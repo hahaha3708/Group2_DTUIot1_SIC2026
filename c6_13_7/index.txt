@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Giam Sat IoT</title>
-    <!-- Nhung thu vien Chart.js de ve bieu do giong slide 266 -->
+    <!-- Nhung thu vien Chart.js de ve bieu do -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Base Reset & Core Styles */
@@ -36,7 +36,7 @@
         .btn-off { background-color: #e4e6eb; color: #4b4b4d; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
         .btn-off:hover { background-color: #d8dadf; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); }
         
-        /* Button State: ON (Vang Gold Cong Nghe hoac Thong Minh) */
+        /* Button State: ON (Vang Gold thong minh) */
         .btn-on { background-color: #ffc107; color: #fff; box-shadow: 0 8px 24px rgba(255, 193, 7, 0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .btn-on:hover { background-color: #ffb300; transform: translateY(-3px); box-shadow: 0 12px 28px rgba(255, 193, 7, 0.5); }
         .btn:active { transform: translateY(1px); }
@@ -67,12 +67,12 @@
     </div>
 
     <script>
-        // 1. Khoi tao du lieu tu server Flask truyen qua
-        const labels = {{ labels | tojson }};
-        const tempCtx = {{ temp | tojson }};
-        const humCtx = {{ hum | tojson }};
+        // 1. Khoi tao du lieu tu server Flask truyen qua (Da them bo loc safe de tranh loi text)
+        const labels = {{ labels | tojson | safe }};
+        const tempCtx = {{ temp | tojson | safe }};
+        const humCtx = {{ hum | tojson | safe }};
 
-        // 2. Cau hinh bieu do Chart.js phien ban Shadow Line muot ma
+        // 2. Cau hinh bieu do Chart.js line muot ma
         const ctx = document.getElementById('iotChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
@@ -121,7 +121,7 @@
             }
         });
 
-        // 3. Ham dieu khien LED qua AJAX thoi gian thuc muon ma
+        // 3. Ham AJAX toggle thay doi trang thai LED tuc thi khong can load trang
         function toggleLed() {
             fetch('/toggle')
                 .then(response => response.json())
