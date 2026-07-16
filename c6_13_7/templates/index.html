@@ -1,17 +1,129 @@
-CREATE DATABASE iot;
+<!DOCTYPE html>
+<html>
 
-USE iot;
+<head>
 
-CREATE TABLE sensor_data(
+<meta charset="utf-8">
 
-id INT AUTO_INCREMENT PRIMARY KEY,
+<title>IoT Dashboard</title>
 
-time DATETIME,
+<link rel="stylesheet" href="/static/style.css">
 
-temperature FLOAT,
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-humidity FLOAT,
+</head>
 
-led_status INT
+<body>
 
-);
+<div class="container">
+
+<h1>HỆ THỐNG GIÁM SÁT DHT11</h1>
+
+<div class="card">
+
+<div class="box">
+
+<h2>Nhiệt độ</h2>
+
+<h1>{{temp[-1]}} °C</h1>
+
+</div>
+
+<div class="box">
+
+<h2>Độ ẩm</h2>
+
+<h1>{{hum[-1]}} %</h1>
+
+</div>
+
+</div>
+
+<canvas id="myChart"></canvas>
+
+<br>
+
+<button id="led">
+
+{% if led %}
+TẮT LED
+{% else %}
+BẬT LED
+{% endif %}
+
+</button>
+
+</div>
+
+<script>
+
+const ctx=document.getElementById("myChart");
+
+new Chart(ctx,{
+
+type:'line',
+
+data:{
+
+labels:{{labels|tojson}},
+
+datasets:[
+
+{
+
+label:'Nhiệt độ',
+
+data:{{temp|tojson}},
+
+borderWidth:3
+
+},
+
+{
+
+label:'Độ ẩm',
+
+data:{{hum|tojson}},
+
+borderWidth:3
+
+}
+
+]
+
+}
+
+});
+
+document.getElementById("led").onclick=function(){
+
+fetch("/toggle")
+
+.then(r=>r.json())
+
+.then(data=>{
+
+if(data.status){
+
+this.innerHTML="TẮT LED";
+
+this.style.background="green";
+
+}
+else{
+
+this.innerHTML="BẬT LED";
+
+this.style.background="red";
+
+}
+
+})
+
+}
+
+</script>
+
+</body>
+
+</html>
