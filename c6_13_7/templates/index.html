@@ -1,129 +1,153 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="vi">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Giam Sat IoT</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Base Reset & Core Styles */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f0f2f5; color: #333; padding: 40px 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        /* Main Container Layout */
+        .dashboard { width: 100%; max-width: 900px; background: #ffffff; padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); }
+        
+        /* Header Styling */
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h2 { font-size: 26px; color: #1a1a1a; font-weight: 700; letter-spacing: -0.5px; }
+        .header p { color: #888; font-size: 14px; margin-top: 5px; }
 
-<meta charset="utf-8">
+        /* Chart Section Cushion */
+        .chart-box { position: relative; width: 100%; background: #fafafa; padding: 20px; border-radius: 16px; border: 1px solid #eaeaea; margin-bottom: 35px; }
+        
+        /* Divider Line */
+        hr { border: 0; height: 1px; background: #eee; margin-bottom: 30px; }
 
-<title>IoT Dashboard</title>
-
-<link rel="stylesheet" href="/static/style.css">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+        /* Control Panel Layout */
+        .control-panel { display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .control-panel h3 { font-size: 16px; font-weight: 600; color: #555; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Smart Professional Button Styling */
+        .btn { padding: 16px 40px; font-size: 16px; font-weight: 600; border: none; border-radius: 50px; cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); outline: none; display: inline-flex; align-items: center; justify-content: center; min-width: 220px; }
+        
+        /* Button State: OFF (Xam thanh lich) */
+        .btn-off { background-color: #e4e6eb; color: #4b4b4d; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+        .btn-off:hover { background-color: #d8dadf; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); }
+        
+        /* Button State: ON (Vang Gold thong minh) */
+        .btn-on { background-color: #ffc107; color: #fff; box-shadow: 0 8px 24px rgba(255, 193, 7, 0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .btn-on:hover { background-color: #ffb300; transform: translateY(-3px); box-shadow: 0 12px 28px rgba(255, 193, 7, 0.5); }
+        .btn:active { transform: translateY(1px); }
+    </style>
 </head>
-
 <body>
 
-<div class="container">
+    <div class="dashboard">
+        <div class="header">
+            <h2>HE THONG GIAM SAT IOT</h2>
+            <p>Du lieu cap nhat truc tiep tu co so du lieu MariaDB</p>
+        </div>
+        
+        <div class="chart-box">
+            <canvas id="iotChart"></canvas>
+        </div>
+        
+        <hr>
+        
+        <div class="control-panel">
+            <h3>Dieu khien thiet bi</h3>
+            <button id="ledBtn" class="btn {% if led == 1 %}btn-on{% else %}btn-off{% endif %}" onclick="toggleLed()">
+                {% if led == 1 %}LED DANG SANG{% else %}LED DANG TAT{% endif %}
+            </button>
+        </div>
+    </div>
 
-<h1>HỆ THỐNG GIÁM SÁT DHT11</h1>
+    <script>
+        // 1. Khoi tao du lieu tu server Flask truyen qua
+        const labels = {{ labels | tojson | safe }};
+        const tempCtx = {{ temp | tojson | safe }};
+        const humCtx = {{ hum | tojson | safe }};
 
-<div class="card">
+        // 2. Cau hinh bieu do Chart.js voi truc Y kep (Dual Y-Axes)
+        const ctx = document.getElementById('iotChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Nhiet do (°C)',
+                        data: tempCtx,
+                        borderColor: '#ff4d4f',
+                        backgroundColor: 'rgba(255, 77, 79, 0.06)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ff4d4f',
+                        pointHoverRadius: 7,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y' // Gan vao truc Y ben trai
+                    },
+                    {
+                        label: 'Do am (%)',
+                        data: humCtx,
+                        borderColor: '#1890ff',
+                        backgroundColor: 'rgba(24, 144, 255, 0.06)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#1890ff',
+                        pointHoverRadius: 7,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y1' // Gan vao truc Y ben phai
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 12, font: { size: 13, weight: '500' } }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { 
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        grid: { color: '#f0f0f0' },
+                        ticks: { font: { size: 12 } },
+                        title: { display: true, text: 'Nhiệt độ (°C)' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false }, // Loai bo luoi chong cheo
+                        ticks: { font: { size: 12 } },
+                        title: { display: true, text: 'Độ ẩm (%)' }
+                    }
+                }
+            }
+        });
 
-<div class="box">
-
-<h2>Nhiệt độ</h2>
-
-<h1>{{temp[-1]}} °C</h1>
-
-</div>
-
-<div class="box">
-
-<h2>Độ ẩm</h2>
-
-<h1>{{hum[-1]}} %</h1>
-
-</div>
-
-</div>
-
-<canvas id="myChart"></canvas>
-
-<br>
-
-<button id="led">
-
-{% if led %}
-TẮT LED
-{% else %}
-BẬT LED
-{% endif %}
-
-</button>
-
-</div>
-
-<script>
-
-const ctx=document.getElementById("myChart");
-
-new Chart(ctx,{
-
-type:'line',
-
-data:{
-
-labels:{{labels|tojson}},
-
-datasets:[
-
-{
-
-label:'Nhiệt độ',
-
-data:{{temp|tojson}},
-
-borderWidth:3
-
-},
-
-{
-
-label:'Độ ẩm',
-
-data:{{hum|tojson}},
-
-borderWidth:3
-
-}
-
-]
-
-}
-
-});
-
-document.getElementById("led").onclick=function(){
-
-fetch("/toggle")
-
-.then(r=>r.json())
-
-.then(data=>{
-
-if(data.status){
-
-this.innerHTML="TẮT LED";
-
-this.style.background="green";
-
-}
-else{
-
-this.innerHTML="BẬT LED";
-
-this.style.background="red";
-
-}
-
-})
-
-}
-
-</script>
-
+        // 3. Ham AJAX toggle thay doi trang thai LED
+        function toggleLed() {
+            fetch('/toggle')
+                .then(response => response.json())
+                .then(data => {
+                    const btn = document.getElementById('ledBtn');
+                    if (data.status === 1) {
+                        btn.className = 'btn btn-on';
+                        btn.innerText = 'LED DANG SANG';
+                    } else {
+                        btn.className = 'btn btn-off';
+                        btn.innerText = 'LED DANG TAT';
+                    }
+                })
+                .catch(err => console.error('Loi khi dieu khien den LED:', err));
+        }
+    </script>
 </body>
-
 </html>
