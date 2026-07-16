@@ -73,14 +73,35 @@ def home():
 
 @app.route("/toggle")
 def toggle():
-    # Dao trang thai chan LED 27 thuc te tren Raspberry Pi
-    if GPIO.input(LED):
-        GPIO.output(LED, GPIO.LOW)
-    else:
-        GPIO.output(LED, GPIO.HIGH)
+    # 1. Dao trang thai chan LED thuc te
+    new_status = 0 if GPIO.input(LED) else 1
+    GPIO.output(LED, new_status)
 
-    # Tra ve trang thai LED thoi gian thuc ve cho Web bang kieu JSON
-    return jsonify({"status": GPIO.input(LED)})
+    # 2. Cap nhat trang thai moi vao CSDL
+    # Ta nen cap nhat vao ban ghi gan nhat hoac chen 1 ban ghi moi co trang thai LED
+    db = None
+    try:
+        db = pymysql.connect(**db_config)
+        cursor = db.cursor()
+        
+        # Cach an toan: Lay nhiet do/do am gan nhat va them trang thai LED vao
+        cursor.execute("""
+            INSERT INTO sensor_measurements (temperature, humidity, led_status)
+            SELECT temperature, humidity, %s 
+            FROM sensor_measurements 
+            ORDER BY id DESC LIMIT 1
+        """, (new_status,))
+        
+        db.commit()
+        cursor.close()
+    except Exception as e:
+        print(f"Loi cap nhat LED vao DB: {e}")
+    finally:
+        if db:
+            db.close()
+
+    # 3. Tra ve ket qua cho web
+    return jsonify({"status": new_status})
 
 if __name__ == "__main__":
     # Chay Flask tren cong 5000, cho phep tat ca thiet bi cung mang ket noi qua IP cua Pi
