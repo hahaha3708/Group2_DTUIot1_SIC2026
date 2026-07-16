@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from flask import Flask, render_template, jsonify
 import pymysql
 import RPi.GPIO as GPIO
@@ -73,3 +74,6 @@ def toggle():
 if __name__ == "__main__":
     # Chay Flask tren cong 5000, cho phep tat ca thiet bi cung mang ket noi qua IP cua Pi
     app.run(host="0.0.0.0", port=5000, debug=True)
+=======
+
+>>>>>>> 4ed7adf603f7c1aaec089a666ad362ca1863fece
