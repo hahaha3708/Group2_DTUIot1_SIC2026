@@ -1,0 +1,129 @@
+import sys
+from flask import Flask, render_template_string, request, jsonify
+
+app = Flask(__name__)
+
+# Giả lập trạng thái của thiết bị phần cứng (Ví dụ trên Raspberry Pi)
+device_status = {
+    "led": "TẮT",
+    "temperature": 27.5,
+    "humidity": 65.0
+}
+
+# Giao diện HTML/CSS được viết trực tiếp dưới dạng String để dễ quản lý trong 1 file
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samsung Innovation Campus - IoT Web Server</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 { color: #0077b6; margin-bottom: 10px; }
+        h3 { color: #555; font-weight: 400; }
+        .card {
+            background: #e0f7fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        .btn {
+            background-color: #009688;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { background-color: #00796b; }
+        .btn-off { background-color: #d32f2f; }
+        .btn-off:hover { background-color: #c2185b; }
+        .status-on { color: #2e7d32; font-weight: bold; }
+        .status-off { color: #c62828; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>SAMSUNG INNOVATION CAMPUS</h1>
+    <h3>Bài 3: Lập trình Điều khiển Thiết bị qua Web Server</h3>
+    <hr>
+    
+    <!-- Hiển thị dữ liệu cảm biến cảm biến -->
+    <div class="card">
+        <p>🌡️ <b>Nhiệt độ hiện tại:</b> {{ status.temperature }} °C</p>
+        <p>💧 <b>Độ ẩm hiện tại:</b> {{ status.humidity }} %</p>
+    </div>
+
+    <!-- Hiển thị trạng thái Đèn LED -->
+    <div class="card">
+        <p>Trạng thái Đèn: 
+            <span class="{% if status.led == 'BẬT' %}status-on{% else %}status-off{% endif %}">
+                {{ status.led }}
+            </span>
+        </p>
+        
+        <!-- Nút nhấn đổi trạng thái -->
+        <a href="/toggle" class="btn {% if status.led == 'BẬT' %}btn-off{% endif %}">
+            {% if status.led == 'BẬT' %} Tắt Đèn {% else %} Bật Đèn {% endif %}
+        </a>
+    </div>
+    
+    <p style="font-size: 12px; color: #888;">© 2026 Toàn bộ mã nguồn bản quyền thực hành SIC</p>
+</div>
+
+</body>
+</html>
+"""
+
+# Cổng vào chính của trang web
+@app.route('/')
+def index():
+    # Trả về giao diện và truyền kèm trạng thái thiết bị
+    return render_template_string(HTML_TEMPLATE, status=device_status)
+
+# Đường dẫn xử lý khi người dùng nhấn nút Bật/Tắt
+@app.route('/toggle')
+def toggle_led():
+    # Thay đổi trạng thái LED qua lại
+    if device_status["led"] == "TẮT":
+        device_status["led"] = "BẬT"
+        # (Tại đây bạn có thể code thêm lệnh bật GPIO của Raspberry Pi nếu có phần cứng thật)
+        print("[HỆ THỐNG] Đã gửi lệnh BẬT ĐÈN tới phần cứng.")
+    else:
+        device_status["led"] = "TẮT"
+        # (Tại đây bạn có thể code thêm lệnh tắt GPIO của Raspberry Pi)
+        print("[HỆ THỐNG] Đã gửi lệnh TẮT ĐÈN tới phần cứng.")
+        
+    return render_template_string(HTML_TEMPLATE, status=device_status)
+
+# API bổ sung (nếu bài học yêu cầu trả về dữ liệu JSON cho ứng dụng mobile/ajax)
+@app.route('/api/status', methods=['GET'])
+def get_status():
+    return jsonify(device_status)
+
+if __name__ == '__main__':
+    print("[KHỞI CHẠY] Web Server đang bắt đầu chạy...")
+    # host='0.0.0.0' cho phép tất cả các thiết bị cùng mạng Wi-Fi truy cập vào (ví dụ dùng điện thoại vào web)
+    # port=5000 là cổng mặc định của Flask
+    app.run(host='0.0.0.0', port=5000, debug=True)
